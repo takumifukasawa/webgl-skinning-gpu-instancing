@@ -28,25 +28,17 @@
 
 <script type="module">
 
-import { AttributeUsageTypes } from "./js/constants.js";
+import { AttributeUsageTypes, UniformTypes } from "./js/constants.js";
 import { Matrix4 } from "./js/Matrix4.js";
+import { Vector3 } from "./js/Vector3.js";
 import { GPU } from "./js/GPU.js";
 import { VertexArrayObject } from "./js/VertexArrayObject.js";
 import { Shader } from "./js/Shader.js";
-import { Vector3 } from "./js/Vector3.js";
-import {UniformTypes} from "./js/constants.js";
+import { Bone } from "./js/Bone.js";
 
 // ----------------------------------------------------------------------------------
 // variables
 // ----------------------------------------------------------------------------------
-
-const targetCameraPosition = new Vector3(0, 0, 8);
-
-let width;
-let height;
-let geometry;
-let shader;
-let uniforms;
 
 const wrapperElement = document.getElementById("js-wrapper")
 const canvasElement = document.getElementById("js-canvas");
@@ -254,6 +246,8 @@ const createBone = () => {
     const childBone4 = new Bone({ name: "child_bone_4", index: 4 });
     childBone4.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (child bone 3)
     childBone3.addChild(childBone4);
+
+    rootBone.calcBoneOffsetMatrix();
     
     const updateBone = (time) => {
         const rot = (Math.sin(time) * 45) * Math.PI / 180;
@@ -270,6 +264,11 @@ const createBone = () => {
             Matrix4.rotationZMatrix(rot)
         );
     }
+
+    return {
+        rootBone,
+        updateBone,
+    }
 }
 
 const createShader = () => {
@@ -285,6 +284,8 @@ layout (location = 3) in vec4 aBoneWeights;
 uniform mat4 uWorldMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
+
+uniform mat4[5] uJointMatrices;
 
 out vec3 vColor;
 
@@ -304,56 +305,19 @@ void main() {
     });   
 }
 
-const onMouseMove = (e) => {
-    const nx = (e.clientX / width) * 2 - 1;
-    const ny = (e.clientY / height) * 2 - 1;
-    targetCameraPosition.x = nx * 4;
-    targetCameraPosition.y = -ny * 4 + 2;
-}
-
-const onWindowResize = () => {
-    width = wrapperElement.offsetWidth;
-    height = wrapperElement.offsetHeight;
-    
-    canvasElement.width = width;
-    canvasElement.height = height;
-    
-    gpu.setSize(0, 0, width, height);
-   
-    const fov = 60;
-    const aspect = width / height;
-    const near = 1;
-    const far = 20;
-    const projectionMatrix = Matrix4.getPerspectiveMatrix(fov * Math.PI / 180, aspect, near, far);
-    uniforms.uProjectionMatrix.value = projectionMatrix;
-};
-
-const tick = () => {
-    const cameraLookAtPosition = new Vector3(0, 2, 0);
-    const cameraWorldMatrix = Matrix4.getLookAtMatrix(targetCameraPosition, cameraLookAtPosition, Vector3.up(), true);
-    uniforms.uViewMatrix.value = cameraWorldMatrix.invert();
-    
-    gpu.clear(0, 0, 0, 1);
-    
-    gpu.setVertexArrayObject(geometry);
-    gpu.setShader(shader);
-    gpu.setUniforms(uniforms);
-   
-    const drawCount = geometry.indices.length;
-    gpu.draw({ drawCount });
-    
-    gpu.flush();
-    requestAnimationFrame(tick);
-};
-
 // ----------------------------------------------------------------------------------
 // main
 // ----------------------------------------------------------------------------------
 
 const main = () => {
-    geometry = createGeometry();
-    shader = createShader();
-    uniforms = {
+    const targetCameraPosition = new Vector3(0, 0, 8);
+    
+    let width;
+    let height;
+    
+    const geometry = createGeometry();
+    const shader = createShader();
+    const uniforms = {
         uProjectionMatrix: {
             type: UniformTypes.Matrix4,
             value: Matrix4.identity()
@@ -366,8 +330,84 @@ const main = () => {
             type: UniformTypes.Matrix4,
             value: Matrix4.identity()
         },
+        uJointMatrices: {
+            type: UniformTypes.Matrix4Array,
+            value: (new Array(5).fill(0).map(() => Matrix4.identity()))
+        },
+    };
+    const { rootBone, updateBone } = createBone();
+    
+    const onMouseMove = (e) => {
+        const nx = (e.clientX / width) * 2 - 1;
+        const ny = (e.clientY / height) * 2 - 1;
+        targetCameraPosition.x = nx * 4;
+        targetCameraPosition.y = -ny * 4 + 2;
     };
     
+    const onWindowResize = () => {
+        width = wrapperElement.offsetWidth;
+        height = wrapperElement.offsetHeight;
+        
+        canvasElement.width = width;
+        canvasElement.height = height;
+        
+        gpu.setSize(0, 0, width, height);
+       
+        const fov = 60;
+        const aspect = width / height;
+        const near = 1;
+        const far = 20;
+        const projectionMatrix = Matrix4.getPerspectiveMatrix(fov * Math.PI / 180, aspect, near, far);
+        uniforms.uProjectionMatrix.value = projectionMatrix;
+    };
+     
+    const getBoneOffsetMatrices = () => {
+        const matrices = [];
+        rootBone.traverse((bone) => {
+            const m = bone.boneOffsetMatrix.clone();
+            matrices.push(m);
+        });
+        return matrices;
+    }
+    
+    const getBoneJointMatrices = () => {
+        const matrices = [];
+        rootBone.traverse((bone) => {
+            const m = bone.jointMatrix.clone();
+            matrices.push(m);
+        });
+        return matrices;        
+    }
+    
+
+    const tick = (time) => {
+        const cameraLookAtPosition = new Vector3(0, 2, 0);
+        const cameraWorldMatrix = Matrix4.getLookAtMatrix(targetCameraPosition, cameraLookAtPosition, Vector3.up(), true);
+        uniforms.uViewMatrix.value = cameraWorldMatrix.invert();
+        
+        updateBone(time / 1000);
+       
+        rootBone.calcJointMatrix();
+        // ボーンオフセット行列を計算
+        const boneOffsetMatrices = getBoneOffsetMatrices();
+        const boneJointMatrices = getBoneJointMatrices();
+        // offset行列を踏まえたjoint行列を計算
+        const jointMatrices = boneOffsetMatrices.map((boneOffsetMatrix, i) => Matrix4.multiplyMatrices(boneJointMatrices[i], boneOffsetMatrix));
+        uniforms.uJointMatrices.value = jointMatrices;
+        
+        gpu.clear(0, 0, 0, 1);
+        
+        gpu.setVertexArrayObject(geometry);
+        gpu.setShader(shader);
+        gpu.setUniforms(uniforms);
+        
+        const drawCount = geometry.indices.length;
+        gpu.draw({ drawCount });
+        
+        gpu.flush();
+        requestAnimationFrame(tick);
+    };
+
     onWindowResize();
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('mousemove', onMouseMove);
