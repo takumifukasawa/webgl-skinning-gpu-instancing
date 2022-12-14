@@ -1,0 +1,179 @@
+﻿<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>cpu-skinning</title>
+    <style>
+        #js-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        #js-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="js-wrapper">
+    <canvas id="js-canvas"></canvas>
+</div>
+
+<script type="module">
+
+import { AttributeUsageTypes } from "./js/constants.js";
+import { Matrix4 } from "./js/Matrix4.js";
+import { GPU } from "./js/GPU.js";
+import { VertexArrayObject } from "./js/VertexArrayObject.js";
+import { Shader } from "./js/Shader.js";
+import { Vector3 } from "./js/Vector3.js";
+import {UniformTypes} from "./js/constants.js";
+
+const wrapperElement = document.getElementById("js-wrapper")
+const canvasElement = document.getElementById("js-canvas");
+const gl = canvasElement.getContext("webgl2", { antialias: false });
+
+// const pixelRatio = Math.min(window.devicePixelRatio, 1.5);
+
+const gpu = new GPU({ gl });
+
+const geometry = new VertexArrayObject({
+    gpu,
+    attributes: {
+        position: {
+            data: [
+                -0.5, -0.5, 0,
+                0.5, -0.5, 0,
+                -0.5, 0.5, 0,
+                0.5, 0.5, 0,
+            ],
+            size: 3,
+            location: 0,
+            usageType: AttributeUsageTypes.StaticDraw
+        },
+        color: {
+            data: [
+                1, 0, 0,
+                0, 1, 0,
+                0, 0, 1,
+                1, 1, 0,
+            ],
+            size: 3,
+            location: 1,
+            usageType: AttributeUsageTypes.StaticDraw
+        }
+    },
+    indices: [
+        0, 1, 2,
+        2, 1, 3
+    ]
+});
+
+const shader = new Shader({
+    gpu,
+    vertexShader: `#version 300 es
+
+layout (location = 0) in vec3 aPosition;   
+layout (location = 1) in vec3 aColor; 
+
+uniform mat4 uWorldMatrix;
+uniform mat4 uViewMatrix;
+uniform mat4 uProjectionMatrix;
+
+out vec3 vColor;
+
+void main() {
+    vColor = aColor;
+    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * vec4(aPosition, 1.);
+}
+`,
+    fragmentShader: `#version 300 es
+precision mediump float;
+in vec3 vColor;
+out vec4 outColor;
+void main() {
+    outColor = vec4(vColor, 1.);
+}
+`
+});
+
+const uniforms = {
+    uProjectionMatrix: {
+        type: UniformTypes.Matrix4,
+        value: Matrix4.identity()
+    },
+    uViewMatrix: {
+        type: UniformTypes.Matrix4,
+        value: Matrix4.identity()
+    },
+    uWorldMatrix: {
+        type: UniformTypes.Matrix4,
+        value: Matrix4.identity()
+    },
+}
+
+let width;
+let height;
+const targetCameraPosition = Vector3.one(0, 0, 5);
+
+const onMouseMove = (e) => {
+    const nx = (e.clientX / width) * 2 - 1;
+    const ny = (e.clientY / height) * 2 - 1;
+    targetCameraPosition.x = nx * 2;
+    targetCameraPosition.y = -ny * 2;
+}
+
+const onWindowResize = () => {
+    width = wrapperElement.offsetWidth;
+    height = wrapperElement.offsetHeight;
+    
+    canvasElement.width = width;
+    canvasElement.height = height;
+    
+    gpu.setSize(0, 0, width, height);
+   
+    const fov = 90;
+    const aspect = width / height;
+    const near = 0.1;
+    const far = 10;
+    const projectionMatrix = Matrix4.getPerspectiveMatrix(fov * Math.PI / 180, aspect, near, far);
+    uniforms.uProjectionMatrix.value = projectionMatrix;
+};
+
+const tick = () => {
+    const cameraWorldMatrix = Matrix4.getLookAtMatrix(targetCameraPosition, Vector3.zero(), Vector3.up(), true);
+    uniforms.uViewMatrix.value = cameraWorldMatrix.invert();
+    
+    gpu.clear(0, 0, 0, 1);
+    
+    gpu.setVertexArrayObject(geometry);
+    gpu.setShader(shader);
+    gpu.setUniforms(uniforms);
+    
+    const drawCount = 6;
+    gpu.draw({ drawCount });
+    
+    gpu.flush();
+    requestAnimationFrame(tick);
+};
+
+const main = () => {
+    onWindowResize();
+    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('mousemove', onMouseMove);
+    requestAnimationFrame(tick);
+};
+
+main();
+
+</script>
+
+</body>
+</html>
