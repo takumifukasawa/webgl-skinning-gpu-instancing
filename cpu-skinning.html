@@ -248,6 +248,17 @@ const createBone = () => {
     childBone3.addChild(childBone4);
 
     rootBone.calcBoneOffsetMatrix();
+   
+    rootBone.boneOffsetMatrix.log();
+    childBone1.boneOffsetMatrix.log();
+    childBone2.boneOffsetMatrix.log();
+    childBone3.boneOffsetMatrix.log();
+    childBone4.boneOffsetMatrix.log();
+    // rootBone.poseMatrix.log();
+    // childBone1.poseMatrix.log();
+    // childBone2.poseMatrix.log();
+    // childBone3.poseMatrix.log();
+    // childBone4.poseMatrix.log();
     
     const updateBone = (time) => {
         const rot = (Math.sin(time) * 45) * Math.PI / 180;
@@ -285,20 +296,28 @@ uniform mat4 uWorldMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 
+uniform mat4[5] uBoneOffsetMatrices;
 uniform mat4[5] uJointMatrices;
 
 out vec3 vColor;
 
 void main() {
     vColor = aColor;
-    mat4 skinMatrix =
+    
+    mat4 boneOffsetMatrix =
+        uBoneOffsetMatrices[int(aBoneIndices.x)] * aBoneWeights.x * 
+        uBoneOffsetMatrices[int(aBoneIndices.y)] * aBoneWeights.y *
+        uBoneOffsetMatrices[int(aBoneIndices.z)] * aBoneWeights.z *
+        uBoneOffsetMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
+     mat4 jointMatrix =
         uJointMatrices[int(aBoneIndices.x)] * aBoneWeights.x * 
         uJointMatrices[int(aBoneIndices.y)] * aBoneWeights.y *
         uJointMatrices[int(aBoneIndices.z)] * aBoneWeights.z *
         uJointMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
     
     // gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * vec4(aPosition, 1.);
-    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * skinMatrix * vec4(aPosition, 1.);
+    // gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * boneOffsetMatrix * vec4(aPosition, 1.);
+    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * jointMatrix * boneOffsetMatrix * vec4(aPosition, 1.);
 }
     `,
         fragmentShader: `#version 300 es
@@ -336,6 +355,10 @@ const main = () => {
         uWorldMatrix: {
             type: UniformTypes.Matrix4,
             value: Matrix4.identity()
+        },
+        uBoneOffsetMatrices: {
+            type: UniformTypes.Matrix4Array,
+            value: (new Array(5).fill(0).map(() => Matrix4.identity()))
         },
         uJointMatrices: {
             type: UniformTypes.Matrix4Array,
@@ -386,7 +409,6 @@ const main = () => {
         return matrices;        
     }
     
-
     const tick = (time) => {
         const cameraLookAtPosition = new Vector3(0, 2, 0);
         const cameraWorldMatrix = Matrix4.getLookAtMatrix(targetCameraPosition, cameraLookAtPosition, Vector3.up(), true);
@@ -399,8 +421,17 @@ const main = () => {
         const boneOffsetMatrices = getBoneOffsetMatrices();
         const boneJointMatrices = getBoneJointMatrices();
         // offset行列を踏まえたjoint行列を計算
-        const jointMatrices = boneOffsetMatrices.map((boneOffsetMatrix, i) => Matrix4.multiplyMatrices(boneJointMatrices[i], boneOffsetMatrix));
-        uniforms.uJointMatrices.value = jointMatrices;
+        // const jointMatrices = boneOffsetMatrices.map((boneOffsetMatrix, i) => Matrix4.multiplyMatrices(boneJointMatrices[i], boneOffsetMatrix));
+        
+        uniforms.uBoneOffsetMatrices.value = boneOffsetMatrices;
+        uniforms.uJointMatrices.value = boneJointMatrices
+        
+        // console.log("##################")
+        // console.log(boneOffsetMatrices)
+        // boneOffsetMatrices.forEach(m => m.log());
+        // console.log("-------------------------")
+        // console.log(boneJointMatrices)
+        // boneJointMatrices.forEach(m => m.log());
         
         gpu.clear(0, 0, 0, 1);
         
@@ -412,6 +443,7 @@ const main = () => {
         gpu.draw({ drawCount });
         
         gpu.flush();
+        
         requestAnimationFrame(tick);
     };
 
