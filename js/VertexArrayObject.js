@@ -8,6 +8,7 @@ export class VertexArrayObject extends GLObject {
     #vboList = {};
     #gpu;
     #ibo;
+    indices;
     
     get hasIndices() {
         return !!this.#ibo;
@@ -56,7 +57,8 @@ export class VertexArrayObject extends GLObject {
         });
 
         if(indices) {
-            this.#ibo = new IndexBufferObject({gpu, indices})
+            this.#ibo = new IndexBufferObject({ gpu, indices })
+            this.indices = indices;
         }
 
         // unbind vertex array to webgl context
