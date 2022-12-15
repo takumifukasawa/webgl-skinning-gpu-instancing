@@ -305,14 +305,14 @@ void main() {
     vColor = aColor;
     
     mat4 boneOffsetMatrix =
-        uBoneOffsetMatrices[int(aBoneIndices.x)] * aBoneWeights.x * 
-        uBoneOffsetMatrices[int(aBoneIndices.y)] * aBoneWeights.y *
-        uBoneOffsetMatrices[int(aBoneIndices.z)] * aBoneWeights.z *
+        uBoneOffsetMatrices[int(aBoneIndices.x)] * aBoneWeights.x + 
+        uBoneOffsetMatrices[int(aBoneIndices.y)] * aBoneWeights.y +
+        uBoneOffsetMatrices[int(aBoneIndices.z)] * aBoneWeights.z +
         uBoneOffsetMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
      mat4 jointMatrix =
-        uJointMatrices[int(aBoneIndices.x)] * aBoneWeights.x * 
-        uJointMatrices[int(aBoneIndices.y)] * aBoneWeights.y *
-        uJointMatrices[int(aBoneIndices.z)] * aBoneWeights.z *
+        uJointMatrices[int(aBoneIndices.x)] * aBoneWeights.x + 
+        uJointMatrices[int(aBoneIndices.y)] * aBoneWeights.y +
+        uJointMatrices[int(aBoneIndices.z)] * aBoneWeights.z +
         uJointMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
     
     // gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * vec4(aPosition, 1.);
