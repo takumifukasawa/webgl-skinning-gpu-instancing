@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>cpu-skinning</title>
+    <title>skinning: uniform matrix</title>
     <style>
         #js-wrapper {
             position: fixed;
@@ -28,14 +28,13 @@
 
 <script type="module">
 
-import { AttributeUsageTypes, UniformTypes, TextureTypes } from "./js/constants.js";
+import { AttributeUsageTypes, UniformTypes } from "./js/constants.js";
 import { Matrix4 } from "./js/Matrix4.js";
 import { Vector3 } from "./js/Vector3.js";
 import { GPU } from "./js/GPU.js";
 import { VertexArrayObject } from "./js/VertexArrayObject.js";
 import { Shader } from "./js/Shader.js";
 import { Bone } from "./js/Bone.js";
-import { Texture } from "./js/Texture.js";
 
 // ----------------------------------------------------------------------------------
 // variables
@@ -53,7 +52,7 @@ const gpu = new GPU({ gl });
 // functions
 // ----------------------------------------------------------------------------------
 
-const createGeometry = ({ instanceCount }) => {
+const createGeometry = () => {
     // -----------------------------
     // # position indices
     // -----------------------------
@@ -294,45 +293,6 @@ const createGeometry = ({ instanceCount }) => {
                 size: 4,
                 location: 3,
             },
-            aInstanceOffsetPosition: {
-                data: [
-                    [0, 0, 2],
-                    [0, 0, 0],
-                    [0, 0, -2],
-                    [0, 0, -4],
-                    [0, 0, -6],
-                    [0, 0, -8],
-                ].flat(),
-                size: 3,
-                location: 4,
-                divisor: 1
-            },
-            aInstanceFrameOffset: {
-                data: [
-                    0,
-                    5,
-                    10,
-                    15,
-                    20,
-                    25,
-                ],
-                size: 1,
-                location: 5,
-                divisor: 1
-            },
-            aInstanceColor: {
-                data: [
-                    [1, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 1],
-                    [1, 1, 0],
-                    [0, 1, 1],
-                    [1, 0, 1],
-                ].flat(),
-                size: 3,
-                location: 6,
-                divisor: 1
-            },
         },
         indices: boxIndices.flat()
     });
@@ -368,8 +328,25 @@ const createBones = () => {
         childBone4,
     ];
    
+    const updateBone = (time) => {
+        const rot = Math.sin(Math.PI * 2 * (time / 2)) * 30 * Math.PI / 180;
+        childBone1.offsetMatrix = Matrix4.multiplyMatrices(
+            Matrix4.translationMatrix(new Vector3(0, 1, 0)),
+            Matrix4.rotationZMatrix(rot)
+        );
+        childBone2.offsetMatrix = Matrix4.multiplyMatrices(
+            Matrix4.translationMatrix(new Vector3(0, 1, 0)),
+            Matrix4.rotationZMatrix(rot)
+        );
+        childBone3.offsetMatrix = Matrix4.multiplyMatrices(
+            Matrix4.translationMatrix(new Vector3(0, 1, 0)),
+            Matrix4.rotationZMatrix(rot)
+        );
+    }
+
     return {
         bones,
+        updateBone,
     }
 }
 
@@ -382,55 +359,25 @@ layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec3 aColor; 
 layout (location = 2) in vec4 aBoneIndices;
 layout (location = 3) in vec4 aBoneWeights;
-layout (location = 4) in vec3 aInstanceOffsetPosition;
-layout (location = 5) in float aInstanceFrameOffset;
-layout (location = 6) in vec3 aInstanceColor;
 
 uniform mat4 uWorldMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
-uniform sampler2D uJointTexture;
-uniform float uTime;
+
+uniform mat4[5] uJointMatrices;
 
 out vec3 vColor;
 
-mat4 getJointMatrix(int boneIndex) {
-
-    return mat4(
-        texelFetch(uJointTexture, ivec2(0, boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(1, boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(2, boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(3, boneIndex), 0)
-    );
-}
-
 void main() {
-    vColor = aInstanceColor;
+    vColor = aColor;
     
-    float fps = 30.;
-    float frameCount = 60.;
-    int frameIndex = int(mod(floor(uTime * fps) + aInstanceFrameOffset, frameCount));
-    int boneCount = 5;
-    
-    int b0 = frameIndex * boneCount + int(aBoneIndices.x);
-    int b1 = frameIndex * boneCount + int(aBoneIndices.y);
-    int b2 = frameIndex * boneCount + int(aBoneIndices.z);
-    int b3 = frameIndex * boneCount + int(aBoneIndices.w);
-
     mat4 skinMatrix =
-        getJointMatrix(b0) * aBoneWeights.x + 
-        getJointMatrix(b1) * aBoneWeights.y +
-        getJointMatrix(b2) * aBoneWeights.z +
-        getJointMatrix(b3) * aBoneWeights.w;
-       
-    mat4 instanceOffsetMatrix = mat4(
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        aInstanceOffsetPosition, 1
-    );
-        
-    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * instanceOffsetMatrix * skinMatrix * vec4(aPosition, 1.);
+        uJointMatrices[int(aBoneIndices.x)] * aBoneWeights.x + 
+        uJointMatrices[int(aBoneIndices.y)] * aBoneWeights.y +
+        uJointMatrices[int(aBoneIndices.z)] * aBoneWeights.z +
+        uJointMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
+    
+    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * skinMatrix * vec4(aPosition, 1.);
 }
     `,
         fragmentShader: `#version 300 es
@@ -457,20 +404,8 @@ const main = () => {
     const { bones, updateBone } = createBones();
     // 全てのボーンのオフセット行列を作成
     bones[0].calcBoneOffsetMatrix();
-
-    const instanceCount = 6;
     
-    const fps = 30;
-    const frameNum = fps * 2;
-
-    // 4pxで行列1個 = boneの行列一個分
-    const jointTexture = new Texture({
-        gpu,
-        width: 4, height: bones.length * frameNum,
-        type: TextureTypes.RGBA32F
-    });
-
-    const geometry = createGeometry({ instanceCount });
+    const geometry = createGeometry();
     const shader = createShader();
     const uniforms = {
         uProjectionMatrix: {
@@ -485,53 +420,12 @@ const main = () => {
             type: UniformTypes.Matrix4,
             value: Matrix4.identity()
         },
-        uJointTexture: {
-            type: UniformTypes.Texture,
-            value: jointTexture
+        uJointMatrices: {
+            type: UniformTypes.Matrix4Array,
+            value: (new Array(5).fill(0).map(() => Matrix4.identity()))
         },
-        uTime: {
-            type: UniformTypes.Float,
-            value: 0
-        }
     };
-
-    const boneAnimationMatrices = new Array(frameNum).fill(0).map((_, i) => {
-        
-        const rotZ = Math.sin(Math.PI * 2 * (i / frameNum)) * 30 * Math.PI / 180;
-        
-        bones[1].offsetMatrix = Matrix4.multiplyMatrices(
-            Matrix4.translationMatrix(new Vector3(0, 1, 0)),
-            Matrix4.rotationZMatrix(rotZ)
-        );
-        bones[2].offsetMatrix = Matrix4.multiplyMatrices(
-            Matrix4.translationMatrix(new Vector3(0, 1, 0)),
-            Matrix4.rotationZMatrix(rotZ)
-        );
-        bones[3].offsetMatrix = Matrix4.multiplyMatrices(
-            Matrix4.translationMatrix(new Vector3(0, 1, 0)),
-            Matrix4.rotationZMatrix(rotZ)
-        );
-
-        // 全てのボーンの現在の姿勢行列を作成
-        bones[0].calcJointMatrix();
-
-        // 現在の姿勢行列 x ボーンオフセット行列
-        const jointMatrices = [
-            Matrix4.multiplyMatrices(bones[0].jointMatrix, bones[0].boneOffsetMatrix), // b0
-            Matrix4.multiplyMatrices(bones[1].jointMatrix, bones[1].boneOffsetMatrix), // b1
-            Matrix4.multiplyMatrices(bones[2].jointMatrix, bones[2].boneOffsetMatrix), // b2
-            Matrix4.multiplyMatrices(bones[3].jointMatrix, bones[3].boneOffsetMatrix), // b3
-            Matrix4.multiplyMatrices(bones[4].jointMatrix, bones[4].boneOffsetMatrix), // b4
-        ];
-
-        const jointMatricesData = jointMatrices.map(mat => [...mat.elements]).flat();
-        
-        return jointMatricesData;
-    });
-
-    const data = new Float32Array(boneAnimationMatrices.flat());
-    jointTexture.setData(data);
-
+    
     const onMouseMove = (e) => {
         const nx = (e.clientX / width) * 2 - 1;
         const ny = (e.clientY / height) * 2 - 1;
@@ -560,8 +454,23 @@ const main = () => {
         const cameraLookAtPosition = new Vector3(0, 2, 0);
         const cameraWorldMatrix = Matrix4.getLookAtMatrix(targetCameraPosition, cameraLookAtPosition, Vector3.up(), true);
         uniforms.uViewMatrix.value = cameraWorldMatrix.invert();
-        uniforms.uTime.value = time / 1000;
         
+        updateBone(time / 1000);
+      
+        // 全てのボーンの現在の姿勢行列を作成
+        bones[0].calcJointMatrix();
+
+        // 現在の姿勢行列 x ボーンオフセット行列
+        const jointMatrices = [
+            Matrix4.multiplyMatrices(bones[0].jointMatrix, bones[0].boneOffsetMatrix), // b0
+            Matrix4.multiplyMatrices(bones[1].jointMatrix, bones[1].boneOffsetMatrix), // b1
+            Matrix4.multiplyMatrices(bones[2].jointMatrix, bones[2].boneOffsetMatrix), // b2
+            Matrix4.multiplyMatrices(bones[3].jointMatrix, bones[3].boneOffsetMatrix), // b3
+            Matrix4.multiplyMatrices(bones[4].jointMatrix, bones[4].boneOffsetMatrix), // b4
+        ];
+
+        uniforms.uJointMatrices.value = jointMatrices
+
         gpu.clear(0, 0, 0, 1);
         
         gpu.setVertexArrayObject(geometry);
@@ -569,10 +478,7 @@ const main = () => {
         gpu.setUniforms(uniforms);
         
         const drawCount = geometry.indices.length;
-        gpu.draw({
-            drawCount,
-            instanceCount
-        });
+        gpu.draw({ drawCount });
         
         gpu.flush();
         
