@@ -294,16 +294,36 @@ const createGeometry = ({ instanceCount }) => {
                 size: 4,
                 location: 3,
             },
-            instanceCount: {
+            aInstanceOffsetPosition: {
                 data: [
-                    [-3, 0, 0],
+                    [-4, 0, 0],
                     [0, 0, 0],
-                    [3, 0, 0],
+                    [4, 0, 0],
                 ].flat(),
                 size: 3,
                 location: 4,
                 divisor: 1
-            }
+            },
+            aInstanceFrameOffset: {
+                data: [
+                    0,
+                    10,
+                    20
+                ],
+                size: 1,
+                location: 5,
+                divisor: 1
+            },
+            aInstanceColor: {
+                data: [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1],
+                ].flat(),
+                size: 3,
+                location: 6,
+                divisor: 1
+            },
         },
         indices: boxIndices.flat()
     });
@@ -354,32 +374,45 @@ layout (location = 1) in vec3 aColor;
 layout (location = 2) in vec4 aBoneIndices;
 layout (location = 3) in vec4 aBoneWeights;
 layout (location = 4) in vec3 aInstanceOffsetPosition;
+layout (location = 5) in float aInstanceFrameOffset;
+layout (location = 6) in vec3 aInstanceColor;
 
 uniform mat4 uWorldMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform sampler2D uJointTexture;
-uniform float uFrameIndex;
+uniform float uTime;
 
 out vec3 vColor;
 
 mat4 getJointMatrix(int boneIndex) {
+
     return mat4(
-        texelFetch(uJointTexture, ivec2(0, int(uFrameIndex) * 5 + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(1, int(uFrameIndex) * 5 + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(2, int(uFrameIndex) * 5 + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(3, int(uFrameIndex) * 5 + boneIndex), 0)
+        texelFetch(uJointTexture, ivec2(0, boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(1, boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(2, boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(3, boneIndex), 0)
     );
 }
 
 void main() {
-    vColor = aColor;
+    vColor = aInstanceColor;
+    
+    float fps = 30.;
+    float frameCount = 60.;
+    int frameIndex = int(mod(floor(uTime * fps) + aInstanceFrameOffset, frameCount));
+    int boneCount = 5;
+    
+    int b0 = frameIndex * boneCount + int(aBoneIndices.x);
+    int b1 = frameIndex * boneCount + int(aBoneIndices.y);
+    int b2 = frameIndex * boneCount + int(aBoneIndices.z);
+    int b3 = frameIndex * boneCount + int(aBoneIndices.w);
 
     mat4 skinMatrix =
-        getJointMatrix(int(aBoneIndices.x)) * aBoneWeights.x + 
-        getJointMatrix(int(aBoneIndices.y)) * aBoneWeights.y +
-        getJointMatrix(int(aBoneIndices.z)) * aBoneWeights.z +
-        getJointMatrix(int(aBoneIndices.w)) * aBoneWeights.w;
+        getJointMatrix(b0) * aBoneWeights.x + 
+        getJointMatrix(b1) * aBoneWeights.y +
+        getJointMatrix(b2) * aBoneWeights.z +
+        getJointMatrix(b3) * aBoneWeights.w;
        
     mat4 instanceOffsetMatrix = mat4(
         1, 0, 0, 0,
@@ -388,7 +421,6 @@ void main() {
         aInstanceOffsetPosition, 1
     );
         
-    // gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * skinMatrix * vec4(aPosition, 1.);
     gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * instanceOffsetMatrix * skinMatrix * vec4(aPosition, 1.);
 }
     `,
@@ -448,7 +480,7 @@ const main = () => {
             type: UniformTypes.Texture,
             value: jointTexture
         },
-        uFrameIndex: {
+        uTime: {
             type: UniformTypes.Float,
             value: 0
         }
@@ -519,7 +551,7 @@ const main = () => {
         const cameraLookAtPosition = new Vector3(0, 2, 0);
         const cameraWorldMatrix = Matrix4.getLookAtMatrix(targetCameraPosition, cameraLookAtPosition, Vector3.up(), true);
         uniforms.uViewMatrix.value = cameraWorldMatrix.invert();
-        uniforms.uFrameIndex.value = Math.floor((time / 1000) * fps) % frameNum;
+        uniforms.uTime.value = time / 1000;
         
         gpu.clear(0, 0, 0, 1);
         
