@@ -56,7 +56,7 @@ export class Bone {
             : this.offsetMatrix;
         this.children.forEach(childBone => childBone.calcJointMatrix(this));
     }
-    
+
     traverse(callback) {
         callback(this);
         this.children.forEach(child => {

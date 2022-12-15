@@ -102,95 +102,177 @@ const createGeometry = () => {
     // |      |
     // 0 ---- 1  ... 0段目
     // -----------------------------
-  
-    // 影響するboneのindex  
-    // 4つまで指定可能
-    const boneIndicesEachHeight = [
-        [0, 0, 0, 0], // 0段目: b0
-        [0, 1, 0, 0], // 1段目: b1
-        [1, 2, 0, 0], // 2段目: b1,b2
-        [2, 3, 0, 0], // 3段目: b2,b3
-        [3, 4, 0, 0], // 4段目: b3,b4
-        [4, 0, 0, 0], // 5段目: b4
-    ];
-   
-    // 影響するboneのindexごとの重さ
-    const boneWeightsEachHeight = [
-        [1, 0, 0, 0],       // 0段目: b0 * 1
-        [0.5, 0.5, 0, 0],   // 1段目: b0 * 0.5, b1 * 0.5
-        [0.5, 0.5, 0, 0],   // 2段目: b1 * 0.5, b2 * 0.5
-        [0.5, 0.5, 0, 0],   // 3段目: b2 * 0.5, b3 * 0.5
-        [0.5, 0.5, 0, 0],   // 4段目: b3 * 0.5, b4 * 0.5
-        [1, 0, 0, 0],       // 5段目: b4 * 1
-    ];
-   
+    
     const boxFaces = [
+        // 底面
         [0, 2, 1, 1, 2, 3],         // bottom
-        
-        [4, 0, 5, 5, 0, 1],         // front_1
-        [5, 1, 7, 7, 1, 3],         // right_1
-        [7, 3, 6, 6, 3, 2],         // back_1
-        [6, 2, 4, 4, 2, 0],         // left_1
-        
-        [8, 4, 9, 9, 4, 5],         // front_2
-        [9, 5, 11, 11, 5, 7],       // right_2
-        [11, 7, 10, 10, 7, 6],      // back_2
-        [10, 6, 8, 8, 6, 4],        // left_2
-        
-        [12, 8, 13, 13, 8, 9],      // front_3
-        [13, 9, 15, 15, 9, 11],     // right_3
-        [15, 11, 14, 14, 11, 10],   // back_3
-        [14, 10, 12, 12, 10, 8],    // left_3
-
-        [16, 12, 17, 17, 12, 13],   // front_4
-        [17, 13, 19, 19, 13, 15],   // right_4
-        [19, 15, 18, 18, 15, 14],   // back_4
-        [18, 14, 16, 16, 14, 12],   // left_4
-
-        [20, 16, 21, 21, 16, 17],   // front_4
-        [21, 17, 23, 23, 17, 19],   // right_4
-        [23, 19, 22, 22, 19, 18],   // back_4
-        [22, 18, 20, 20, 18, 16],   // left_4
-        
+        // 1段目
+        [4, 0, 5, 5, 0, 1],         // front
+        [5, 1, 7, 7, 1, 3],         // right
+        [7, 3, 6, 6, 3, 2],         // back
+        [6, 2, 4, 4, 2, 0],         // left
+        // 2段目
+        [8, 4, 9, 9, 4, 5],         // front
+        [9, 5, 11, 11, 5, 7],       // right
+        [11, 7, 10, 10, 7, 6],      // back
+        [10, 6, 8, 8, 6, 4],        // left
+        // 3段目
+        [12, 8, 13, 13, 8, 9],      // front
+        [13, 9, 15, 15, 9, 11],     // right
+        [15, 11, 14, 14, 11, 10],   // back
+        [14, 10, 12, 12, 10, 8],    // left
+        // 4段目
+        [16, 12, 17, 17, 12, 13],   // front
+        [17, 13, 19, 19, 13, 15],   // right
+        [19, 15, 18, 18, 15, 14],   // back
+        [18, 14, 16, 16, 14, 12],   // left
+        // 5段目
+        [20, 16, 21, 21, 16, 17],   // front
+        [21, 17, 23, 23, 17, 19],   // right
+        [23, 19, 22, 22, 19, 18],   // back
+        [22, 18, 20, 20, 18, 16],   // left
+        // 上面
         [22, 20, 23, 23, 20, 21],   // top
     ];
     
     const indices = [...boxFaces].flat();
   
     const boxPositions = [
-        [-0.5, 0, 0.5],     // 0
-        [0.5, 0, 0.5],      // 1
-        [-0.5, 0, -0.5],    // 2
-        [0.5, 0, -0.5],     // 3
-        [-0.5, 1, 0.5],     // 4
-        [0.5, 1, 0.5],      // 5
-        [-0.5, 1, -0.5],    // 6
-        [0.5, 1, -0.5],     // 7
-        [-0.5, 2, 0.5],     // 8
-        [0.5, 2, 0.5],      // 9
-        [-0.5, 2, -0.5],    // 10
-        [0.5, 2, -0.5],     // 11
-        [-0.5, 3, 0.5],     // 12
-        [0.5, 3, 0.5],      // 13
-        [-0.5, 3, -0.5],    // 14
-        [0.5, 3, -0.5],     // 15
-        [-0.5, 4, 0.5],     // 16
-        [0.5, 4, 0.5],      // 17
-        [-0.5, 4, -0.5],    // 18
-        [0.5, 4, -0.5],     // 19
-        [-0.5, 5, 0.5],     // 20
-        [0.5, 5, 0.5],      // 21
-        [-0.5, 5, -0.5],    // 22
-        [0.5, 5, -0.5],     // 23
+        // 0段目
+        [-0.5, 0, 0.5],     // p0
+        [0.5, 0, 0.5],      // p1
+        [-0.5, 0, -0.5],    // p2
+        [0.5, 0, -0.5],     // p3
+        // 1段目
+        [-0.5, 1, 0.5],     // p4
+        [0.5, 1, 0.5],      // p5
+        [-0.5, 1, -0.5],    // p6
+        [0.5, 1, -0.5],     // p7
+        // 2段目
+        [-0.5, 2, 0.5],     // p8
+        [0.5, 2, 0.5],      // p9
+        [-0.5, 2, -0.5],    // p10
+        [0.5, 2, -0.5],     // p11
+        // 4段目
+        [-0.5, 3, 0.5],     // p12
+        [0.5, 3, 0.5],      // p13
+        [-0.5, 3, -0.5],    // p14
+        [0.5, 3, -0.5],     // p15
+        // 5段目
+        [-0.5, 4, 0.5],     // p16
+        [0.5, 4, 0.5],      // p17
+        [-0.5, 4, -0.5],    // p18
+        [0.5, 4, -0.5],     // p19
+        // 6段目
+        [-0.5, 5, 0.5],     // p20
+        [0.5, 5, 0.5],      // p21
+        [-0.5, 5, -0.5],    // p22
+        [0.5, 5, -0.5],     // p23
     ].flat(); 
     
     const boxColors = [
-        ...(new Array(4).fill(0).map(() => [1, 0, 0])), // 0段目
-        ...(new Array(4).fill(0).map(() => [0, 1, 0])), // 1段目
-        ...(new Array(4).fill(0).map(() => [0, 0, 1])), // 2段目
-        ...(new Array(4).fill(0).map(() => [1, 1, 0])), // 3段目
-        ...(new Array(4).fill(0).map(() => [0, 1, 1])), // 4段目
-        ...(new Array(4).fill(0).map(() => [1, 0, 1])), // 5段目
+        // 0段目
+        [1, 0, 0], // p0
+        [1, 0, 0], // p1
+        [1, 0, 0], // p2
+        [1, 0, 0], // p3
+        // 1段目
+        [0, 1, 0], // p4
+        [0, 1, 0], // p5
+        [0, 1, 0], // p6
+        [0, 1, 0], // p7
+        // 2段目
+        [0, 0, 1], // p8
+        [0, 0, 1], // p9
+        [0, 0, 1], // p10
+        [0, 0, 1], // p11
+        // 3段目
+        [1, 1, 0], // p12
+        [1, 1, 0], // p13
+        [1, 1, 0], // p14
+        [1, 1, 0], // p15
+        // 4段目
+        [0, 1, 1], // p16
+        [0, 1, 1], // p17
+        [0, 1, 1], // p18
+        [0, 1, 1], // p19
+        // 5段目
+        [1, 0, 1], // p20
+        [1, 0, 1], // p21
+        [1, 0, 1], // p22
+        [1, 0, 1], // p23
+    ].flat();
+    
+    // 影響するboneのindex  
+    // 4つまで指定可能
+    const boneIndices = [
+        // 0段目
+        [0, 0, 0, 0], // p0: b0
+        [0, 0, 0, 0], // p1: b0
+        [0, 0, 0, 0], // p2: b0
+        [0, 0, 0, 0], // p3: b0
+        // 1段目
+        [0, 1, 0, 0], // p4: b1
+        [0, 1, 0, 0], // p5: b1
+        [0, 1, 0, 0], // p6: b1
+        [0, 1, 0, 0], // p7: b1
+        // 2段目
+        [1, 2, 0, 0], // p8: b1,b2
+        [1, 2, 0, 0], // p9: b1,b2
+        [1, 2, 0, 0], // p10: b1,b2
+        [1, 2, 0, 0], // p11: b1,b2
+        // 3段目
+        [2, 3, 0, 0], // p12: b2,b3
+        [2, 3, 0, 0], // p13: b2,b3
+        [2, 3, 0, 0], // p14: b2,b3
+        [2, 3, 0, 0], // p15: b2,b3
+        // 4段目
+        [3, 4, 0, 0], // p16: b3,b4
+        [3, 4, 0, 0], // p17: b3,b4
+        [3, 4, 0, 0], // p18: b3,b4
+        [3, 4, 0, 0], // p19: b3,b4
+        // 5段目
+        [4, 0, 0, 0], // p20: b4
+        [4, 0, 0, 0], // p21: b4
+        [4, 0, 0, 0], // p22: b4
+        [4, 0, 0, 0], // p23: b4
+    ];
+
+    // 影響するboneのindexごとの重さ
+    const boneWeightsEachHeight = [
+        // 0段目
+        [1, 0, 0, 0],       // p0: b0 * 1
+        [1, 0, 0, 0],       // p1: b0 * 1
+        [1, 0, 0, 0],       // p2: b0 * 1
+        [1, 0, 0, 0],       // p3: b0 * 1
+        // 1段目
+        [0.5, 0.5, 0, 0],   // p4: b0 * 0.5, b1 * 0.5
+        [0.5, 0.5, 0, 0],   // p5: b0 * 0.5, b1 * 0.5
+        [0.5, 0.5, 0, 0],   // p6: b0 * 0.5, b1 * 0.5
+        [0.5, 0.5, 0, 0],   // p7: b0 * 0.5, b1 * 0.5
+        // 2段目
+        [0.5, 0.5, 0, 0],   // p8: b1 * 0.5, b2 * 0.5
+        [0.5, 0.5, 0, 0],   // p9: b1 * 0.5, b2 * 0.5
+        [0.5, 0.5, 0, 0],   // p10: b1 * 0.5, b2 * 0.5
+        [0.5, 0.5, 0, 0],   // p11: b1 * 0.5, b2 * 0.5
+        // 3段目
+        [0.5, 0.5, 0, 0],   // p12: b2 * 0.5, b3 * 0.5
+        [0.5, 0.5, 0, 0],   // p13: b2 * 0.5, b3 * 0.5
+        [0.5, 0.5, 0, 0],   // p14: b2 * 0.5, b3 * 0.5
+        [0.5, 0.5, 0, 0],   // p15: b2 * 0.5, b3 * 0.5
+        // 4段目
+        [0.5, 0.5, 0, 0],   // p16: b3 * 0.5, b4 * 0.5
+        [0.5, 0.5, 0, 0],   // p16: b3 * 0.5, b4 * 0.5
+        [0.5, 0.5, 0, 0],   // p18: b3 * 0.5, b4 * 0.5
+        [0.5, 0.5, 0, 0],   // p19: b3 * 0.5, b4 * 0.5
+        // 5段目
+        [1, 0, 0, 0],       // p20: b4 * 1
+        [1, 0, 0, 0],       // p21: b4 * 1
+        [1, 0, 0, 0],       // p22: b4 * 1
+        [1, 0, 0, 0],       // p23: b4 * 1
+    ];
+
+    const boneWeights = [
     ].flat();
     
     return new VertexArrayObject({
@@ -209,7 +291,7 @@ const createGeometry = () => {
                 usageType: AttributeUsageTypes.StaticDraw
             },
             aBoneIndices: {
-                data: (new Array(6 * 4).fill(0).map((elem, i) => boneIndicesEachHeight[Math.floor(i / 4)])).flat(),
+                data: boneIndices,
                 size: 4,
                 location: 2,
                 usageType: AttributeUsageTypes.StaticDraw
@@ -225,7 +307,7 @@ const createGeometry = () => {
     });
 }
 
-const createBone = () => {
+const createBones = () => {
     const rootBone = new Bone({ name: "root_bone", index: 0 });
     rootBone.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 0.5, 0)); // offset
     
@@ -247,19 +329,9 @@ const createBone = () => {
     childBone4.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (child bone 3)
     childBone3.addChild(childBone4);
 
+    // ボーンオフセット行列を作成
     rootBone.calcBoneOffsetMatrix();
    
-    rootBone.boneOffsetMatrix.log();
-    childBone1.boneOffsetMatrix.log();
-    childBone2.boneOffsetMatrix.log();
-    childBone3.boneOffsetMatrix.log();
-    childBone4.boneOffsetMatrix.log();
-    // rootBone.poseMatrix.log();
-    // childBone1.poseMatrix.log();
-    // childBone2.poseMatrix.log();
-    // childBone3.poseMatrix.log();
-    // childBone4.poseMatrix.log();
-    
     const updateBone = (time) => {
         const rot = (Math.sin(time) * 45) * Math.PI / 180;
         childBone1.offsetMatrix = Matrix4.multiplyMatrices(
@@ -296,7 +368,6 @@ uniform mat4 uWorldMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 
-uniform mat4[5] uBoneOffsetMatrices;
 uniform mat4[5] uJointMatrices;
 
 out vec3 vColor;
@@ -304,20 +375,13 @@ out vec3 vColor;
 void main() {
     vColor = aColor;
     
-    mat4 boneOffsetMatrix =
-        uBoneOffsetMatrices[int(aBoneIndices.x)] * aBoneWeights.x + 
-        uBoneOffsetMatrices[int(aBoneIndices.y)] * aBoneWeights.y +
-        uBoneOffsetMatrices[int(aBoneIndices.z)] * aBoneWeights.z +
-        uBoneOffsetMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
-     mat4 jointMatrix =
+    mat4 jointMatrix =
         uJointMatrices[int(aBoneIndices.x)] * aBoneWeights.x + 
         uJointMatrices[int(aBoneIndices.y)] * aBoneWeights.y +
         uJointMatrices[int(aBoneIndices.z)] * aBoneWeights.z +
         uJointMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
     
-    // gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * vec4(aPosition, 1.);
-    // gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * boneOffsetMatrix * vec4(aPosition, 1.);
-    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * jointMatrix * boneOffsetMatrix * vec4(aPosition, 1.);
+    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * jointMatrix * vec4(aPosition, 1.);
 }
     `,
         fragmentShader: `#version 300 es
@@ -356,16 +420,12 @@ const main = () => {
             type: UniformTypes.Matrix4,
             value: Matrix4.identity()
         },
-        uBoneOffsetMatrices: {
-            type: UniformTypes.Matrix4Array,
-            value: (new Array(5).fill(0).map(() => Matrix4.identity()))
-        },
         uJointMatrices: {
             type: UniformTypes.Matrix4Array,
             value: (new Array(5).fill(0).map(() => Matrix4.identity()))
         },
     };
-    const { rootBone, updateBone } = createBone();
+    const { rootBone, updateBone } = createBones();
     
     const onMouseMove = (e) => {
         const nx = (e.clientX / width) * 2 - 1;
@@ -417,22 +477,16 @@ const main = () => {
         updateBone(time / 1000);
        
         rootBone.calcJointMatrix();
+
         // ボーンオフセット行列を計算
         const boneOffsetMatrices = getBoneOffsetMatrices();
+        // 現在の姿勢行列
         const boneJointMatrices = getBoneJointMatrices();
-        // offset行列を踏まえたjoint行列を計算
-        // const jointMatrices = boneOffsetMatrices.map((boneOffsetMatrix, i) => Matrix4.multiplyMatrices(boneJointMatrices[i], boneOffsetMatrix));
-        
-        uniforms.uBoneOffsetMatrices.value = boneOffsetMatrices;
-        uniforms.uJointMatrices.value = boneJointMatrices
-        
-        // console.log("##################")
-        // console.log(boneOffsetMatrices)
-        // boneOffsetMatrices.forEach(m => m.log());
-        // console.log("-------------------------")
-        // console.log(boneJointMatrices)
-        // boneJointMatrices.forEach(m => m.log());
-        
+        // 現在の姿勢行列 x ボーンオフセット行列
+        const jointMatrices = boneOffsetMatrices.map((boneOffsetMatrix, i) => Matrix4.multiplyMatrices(boneJointMatrices[i], boneOffsetMatrix));
+
+        uniforms.uJointMatrices.value = jointMatrices
+
         gpu.clear(0, 0, 0, 1);
         
         gpu.setVertexArrayObject(geometry);
