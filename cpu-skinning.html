@@ -323,9 +323,6 @@ const createBones = () => {
     const childBone4 = new Bone({ name: "child_bone_4", index: 4 });
     childBone4.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (child bone 3)
     childBone3.addChild(childBone4);
-
-    // ボーンオフセット行列を作成
-    rootBone.calcBoneOffsetMatrix();
     
     const bones = [
         rootBone,
@@ -378,13 +375,13 @@ out vec3 vColor;
 void main() {
     vColor = aColor;
     
-    mat4 jointMatrix =
+    mat4 skinMatrix =
         uJointMatrices[int(aBoneIndices.x)] * aBoneWeights.x + 
         uJointMatrices[int(aBoneIndices.y)] * aBoneWeights.y +
         uJointMatrices[int(aBoneIndices.z)] * aBoneWeights.z +
         uJointMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
     
-    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * jointMatrix * vec4(aPosition, 1.);
+    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * skinMatrix * vec4(aPosition, 1.);
 }
     `,
         fragmentShader: `#version 300 es
@@ -407,6 +404,10 @@ const main = () => {
     
     let width;
     let height;
+
+    const { bones, updateBone } = createBones();
+    // 全てのボーンのオフセット行列を作成
+    bones[0].calcBoneOffsetMatrix();
     
     const geometry = createGeometry();
     const shader = createShader();
@@ -428,7 +429,6 @@ const main = () => {
             value: (new Array(5).fill(0).map(() => Matrix4.identity()))
         },
     };
-    const { bones, updateBone } = createBones();
     
     const onMouseMove = (e) => {
         const nx = (e.clientX / width) * 2 - 1;
@@ -461,7 +461,7 @@ const main = () => {
         
         updateBone(time / 1000);
       
-        // bones[0]はrootbone
+        // 全てのボーンの現在の姿勢行列を作成
         bones[0].calcJointMatrix();
 
         // 現在の姿勢行列 x ボーンオフセット行列

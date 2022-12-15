@@ -24,8 +24,6 @@ export const AttributeUsageTypes = {
 
 export const TextureTypes = {
     RGBA: "RGBA",
-    Depth: "Depth",
-    RGBA16F: "RGBA16F",
     RGBA32F: "RGBA32F"
 };
 
