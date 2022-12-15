@@ -330,7 +330,7 @@ const createBones = () => {
     ];
    
     const updateBone = (time) => {
-        const rot = (Math.sin(time) * 45) * Math.PI / 180;
+        const rot = Math.sin(Math.PI * 2 * (time / 2)) * 30 * Math.PI / 180;
         childBone1.offsetMatrix = Matrix4.multiplyMatrices(
             Matrix4.translationMatrix(new Vector3(0, 1, 0)),
             Matrix4.rotationZMatrix(rot)
@@ -417,7 +417,7 @@ const main = () => {
     // 4pxで行列1個 = boneの行列一個分
     const jointTexture = new Texture({
         gpu,
-        width: 4, height: 5,
+        width: 4, height: bones.length,
         type: TextureTypes.RGBA32F
     });
 

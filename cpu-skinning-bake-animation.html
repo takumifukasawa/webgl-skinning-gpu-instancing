@@ -368,15 +368,16 @@ uniform mat4 uWorldMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform sampler2D uJointTexture;
+uniform float uFrameIndex;
 
 out vec3 vColor;
 
 mat4 getJointMatrix(int boneIndex) {
     return mat4(
-        texelFetch(uJointTexture, ivec2(0, boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(1, boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(2, boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(3, boneIndex), 0)
+        texelFetch(uJointTexture, ivec2(0, int(uFrameIndex) * 5 + boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(1, int(uFrameIndex) * 5 + boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(2, int(uFrameIndex) * 5 + boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(3, int(uFrameIndex) * 5 + boneIndex), 0)
     );
 }
 
@@ -417,10 +418,13 @@ const main = () => {
     // 全てのボーンのオフセット行列を作成
     bones[0].calcBoneOffsetMatrix();
 
+    const fps = 30;
+    const frameNum = fps * 2;
+
     // 4pxで行列1個 = boneの行列一個分
     const jointTexture = new Texture({
         gpu,
-        width: 4, height: 5,
+        width: 4, height: bones.length * frameNum,
         type: TextureTypes.RGBA32F
     });
 
@@ -442,14 +446,19 @@ const main = () => {
         uJointTexture: {
             type: UniformTypes.Texture,
             value: jointTexture
+        },
+        uFrameIndex: {
+            type: UniformTypes.Float,
+            value: 0
         }
     };
 
     const bakeBone = () => {
-        const frameNum = 30 * 2;
-        const frames = new Array(frameNum).fill(0).map((_, i) => (Math.sin(Math.PI * 2 * (i / frameNum)) * Math.PI / 180));
+        
         const boneAnimationMatrices = new Array(frameNum).fill(0).map((_, i) => {
-            const rotZ = frames[i];
+            
+            const rotZ = Math.sin(Math.PI * 2 * (i / frameNum)) * 30 * Math.PI / 180;
+            
             bones[1].offsetMatrix = Matrix4.multiplyMatrices(
                 Matrix4.translationMatrix(new Vector3(0, 1, 0)),
                 Matrix4.rotationZMatrix(rotZ)
@@ -462,7 +471,6 @@ const main = () => {
                 Matrix4.translationMatrix(new Vector3(0, 1, 0)),
                 Matrix4.rotationZMatrix(rotZ)
             );
-            bones[0].calcJointMatrix();
 
             // 全てのボーンの現在の姿勢行列を作成
             bones[0].calcJointMatrix();
@@ -476,11 +484,13 @@ const main = () => {
                 Matrix4.multiplyMatrices(bones[4].jointMatrix, bones[4].boneOffsetMatrix), // b4
             ];
 
-            const jointMatricesData = new Float32Array(jointMatrices.map(mat => [...mat.elements]).flat());
+            const jointMatricesData = jointMatrices.map(mat => [...mat.elements]).flat();
             
             return jointMatricesData;
         });
-        console.log(boneAnimationMatrices)
+
+        const data = new Float32Array(boneAnimationMatrices.flat());
+        jointTexture.setData(data);
     }
     bakeBone();
 
@@ -512,23 +522,7 @@ const main = () => {
         const cameraLookAtPosition = new Vector3(0, 2, 0);
         const cameraWorldMatrix = Matrix4.getLookAtMatrix(targetCameraPosition, cameraLookAtPosition, Vector3.up(), true);
         uniforms.uViewMatrix.value = cameraWorldMatrix.invert();
-        
-        updateBone(time / 1000);
-      
-        // 全てのボーンの現在の姿勢行列を作成
-        bones[0].calcJointMatrix();
-
-        // 現在の姿勢行列 x ボーンオフセット行列
-        const jointMatrices = [
-            Matrix4.multiplyMatrices(bones[0].jointMatrix, bones[0].boneOffsetMatrix), // b0
-            Matrix4.multiplyMatrices(bones[1].jointMatrix, bones[1].boneOffsetMatrix), // b1
-            Matrix4.multiplyMatrices(bones[2].jointMatrix, bones[2].boneOffsetMatrix), // b2
-            Matrix4.multiplyMatrices(bones[3].jointMatrix, bones[3].boneOffsetMatrix), // b3
-            Matrix4.multiplyMatrices(bones[4].jointMatrix, bones[4].boneOffsetMatrix), // b4
-        ];
-
-        const jointMatricesData = new Float32Array(jointMatrices.map(mat => [...mat.elements]).flat());
-        jointTexture.setData(jointMatricesData);
+        uniforms.uFrameIndex.value = Math.floor((time / 1000) * fps) % frameNum;
         
         gpu.clear(0, 0, 0, 1);
         
