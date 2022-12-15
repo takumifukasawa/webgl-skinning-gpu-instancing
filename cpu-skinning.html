@@ -277,25 +277,21 @@ const createGeometry = () => {
                 data: boxPositions.flat(),
                 size: 3,
                 location: 0,
-                usageType: AttributeUsageTypes.StaticDraw
             },
             color: {
                 data: boxColors.flat(),
                 size: 3,
                 location: 1,
-                usageType: AttributeUsageTypes.StaticDraw
             },
             aBoneIndices: {
                 data: boneIndices.flat(),
                 size: 4,
                 location: 2,
-                usageType: AttributeUsageTypes.StaticDraw
             },
             aBoneWeights: {
                 data: boneWeights.flat(),
                 size: 4,
                 location: 3,
-                usageType: AttributeUsageTypes.StaticDraw
             },
         },
         indices: boxIndices.flat()
