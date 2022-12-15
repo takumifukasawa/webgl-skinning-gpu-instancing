@@ -12,14 +12,9 @@ export const UniformTypes = {
     Matrix4: "Matrix4",
     Matrix4Array: "Matrix4Array",
     Texture: "Texture",
-    CubeMap: "CubeMap",
-    Vector2: "Vector2",
     Vector3: "Vector3",
-    Struct: "Struct",
     Float: "Float",
     Int: "Int",
-    Color: "Color",
-    ColorArray: "ColorArray",
 };
 
 export const AttributeUsageTypes = {
@@ -27,4 +22,24 @@ export const AttributeUsageTypes = {
     DynamicDraw: "DynamicDraw"
 };
 
+export const TextureTypes = {
+    RGBA: "RGBA",
+    Depth: "Depth",
+    RGBA16F: "RGBA16F",
+    RGBA32F: "RGBA32F"
+};
+
+export const TextureWrapTypes = {
+    Repeat: "Repeat",
+    ClampToEdge: "ClampToEdge",
+};
+
+export const TextureFilterTypes = {
+    Nearest: "Nearest", // min, mag
+    Linear: "Linear", // min, mag
+    NearestMipmapNearest: "NearestMipmapNearest", // only min filter
+    NearestMipmapLinear: "NearestMipmapLinear", // only min filter,
+    LinearMipmapNearest: "LinearMipmapNearest", // only min filter
+    LinearMipmapLinear: "LinearMipmapLinear", // only min filter
+};
 

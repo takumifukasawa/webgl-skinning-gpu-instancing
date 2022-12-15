@@ -1,14 +1,30 @@
 ﻿
 import { PrimitiveTypes, UniformTypes } from "./constants.js";
+import { Texture } from "./Texture.js";
+
+const createWhite1x1 = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 1;
+    canvas.height = 1;
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, 1, 1);
+    return canvas;
+};
 
 export class GPU {
     gl;
     #shader;
     #vao;
     #uniforms;
+    #dummyTexture;
 
     constructor({ gl }) {
         this.gl = gl;
+        this.#dummyTexture = new Texture({
+            gpu: this,
+            img: createWhite1x1(),
+        });
     }
 
     setShader(shader) {
@@ -27,23 +43,14 @@ export class GPU {
         this.gl.viewport(x, y, width, height);
     }
     
-    setFramebuffer(framebuffer) {
-        const gl = this.gl;
-        !!framebuffer
-            ? gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer.glObject)
-            : gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    }
-
     flush() {
         this.gl.flush();
     }
 
     clear(r, g, b, a) {
         const gl = this.gl;
-        // TODO: mask設定は外側からやった方がよい気がする
         gl.depthMask(true);
         gl.colorMask(true, true, true, true);
-        gl.enable(gl.CULL_FACE);
         gl.enable(gl.DEPTH_TEST);
         gl.clearColor(r, g, b, a);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -83,19 +90,17 @@ export class GPU {
 
         gl.useProgram(this.#shader.glObject);
         
+        let activeTextureIndex = 0;
+
         const setUniformValue = (type, uniformName, value) => {
             const gl = this.gl;
             const location = gl.getUniformLocation(this.#shader.glObject, uniformName);
-            // TODO: nullなとき,値がおかしいときはセットしない
             switch(type) {
                 case UniformTypes.Int:
                     gl.uniform1i(location, value);
                     break;
                 case UniformTypes.Float:
                     gl.uniform1f(location, value);
-                    break;
-                case UniformTypes.Vector2:
-                    gl.uniform2fv(location, value.elements);
                     break;
                 case UniformTypes.Vector3:
                     gl.uniform3fv(location, value.elements);
@@ -110,11 +115,22 @@ export class GPU {
                         gl.uniformMatrix4fv(location, false, value.map(v => [...v.elements]).flat());
                     }
                     break;
+                case UniformTypes.Texture:
+                    if(value) {
+                        gl.activeTexture(gl.TEXTURE0 + activeTextureIndex);
+                        gl.bindTexture(
+                            gl.TEXTURE_2D,
+                            value ? value.glObject : this.#dummyTexture.glObject
+                        );
+                        gl.uniform1i(location, activeTextureIndex);
+                        activeTextureIndex++;
+                    }
+                    break;
                 default:
                     throw `invalid uniform - name: ${uniformName}, type: ${type}`;
             }
         };
- 
+
         // uniforms
         if(this.#uniforms) {
             Object.keys(this.#uniforms).forEach(uniformName => {
@@ -154,5 +170,7 @@ export class GPU {
                 gl.drawArrays(glPrimitiveType, startOffset, drawCount);
             }
         }
+
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 }

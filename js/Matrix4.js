@@ -142,10 +142,6 @@ export class Matrix4 {
         return this.elements[15]= value;
     }
     
-    get position() {
-        return new Vector3(this.m03, this.m13, this.m23);
-    }
-    
     constructor(
         n00, n01, n02, n03,
         n10, n11, n12, n13,
@@ -381,65 +377,6 @@ export class Matrix4 {
         return this;
     }
    
-    // ref: http://www.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/tech0023.html
-    // invert() {
-    //     const m11 = this.m00;
-    //     const m12 = this.m01;
-    //     const m13 = this.m02;
-    //     const m14 = this.m03;
-    //     const m21 = this.m10;
-    //     const m22 = this.m11;
-    //     const m23 = this.m12;
-    //     const m24 = this.m13;
-    //     const m31 = this.m20;
-    //     const m32 = this.m21;
-    //     const m33 = this.m22;
-    //     const m34 = this.m23;
-    //     const m41 = this.m30;
-    //     const m42 = this.m31;
-    //     const m43 = this.m32;
-    //     const m44 = this.m33;
-    //     
-    //     const det = 
-    //               m11 * m22 * m33 * m44 + m11 * m23 * m34 * m42 + m11 * m24 * m32 * m43
-    //             + m12 * m21 * m34 * m43 + m12 * m23 * m31 * m44 + m12 * m24 * m33 * m41
-    //             + m13 * m21 * m32 * m44 + m13 * m22 * m34 * m41 + m13 * m24 * m31 * m42
-    //             + m14 * m21 * m33 * m42 - m14 * m22 * m31 * m43 + m14 * m23 * m32 * m41
-    //             - m11 * m22 * m34 * m43 - m11 * m23 * m32 * m44 - m11 * m24 * m33 * m42
-    //             - m12 * m21 * m33 * m44 - m12 * m23 * m34 * m41 - m12 * m24 * m31 * m43
-    //             - m13 * m21 * m34 * m42 - m13 * m22 * m31 * m44 - m13 * m24 * m32 * m41
-    //             - m14 * m21 * m32 * m43 - m14 * m22 * m33 * m41 - m14 * m23 * m31 * m42;
-    //     
-    //     const invD = 1 / det;
-    //    
-    //     const n11 = (m22 * m33 * m44 + m23 * m34 * m42 + m24 * m32 * m43 - m22 * m34 * m43 - m23 * m32 * m44 - m24 * m33 * m42) * invD;
-    //     const n12 = (m12 * m34 * m43 + m13 * m32 * m44 + m14 * m33 * m42 - m12 * m33 * m44 - m13 * m34 * m42 - m14 * m32 * m43) * invD;
-    //     const n13 = (m12 * m23 * m44 + m13 * m24 * m42 + m14 * m22 * m43 - m12 * m24 * m43 - m13 * m22 * m44 - m14 * m23 * m42) * invD;
-    //     const n14 = (m12 * m24 * m33 + m13 * m22 * m34 + m14 * m23 * m32 - m12 * m23 * m34 - m13 * m24 * m32 - m14 * m22 * m33) * invD;
-    //     
-    //     const n21 = (m21 * m34 * m43 + m23 * m31 * m44 + m24 * m33 * m41 - m21 * m33 * m44 - m23 * m34 * m41 - m24 * m31 * m43) * invD;
-    //     const n22 = (m11 * m33 * m44 + m13 + m34 * m41 + m14 * m31 * m43 - m11 * m34 * m43 - m13 * m31 * m44 - m14 * m33 * m41) * invD;
-    //     const n23 = (m11 * m24 * m43 + m13 * m21 * m44 + m14 * m23 * m41 - m11 * m23 * m44 - m13 * m24 * m41 - m14 * m21 * m43) * invD;
-    //     const n24 = (m11 * m23 * m34 + m13 * m24 * m31 + m14 * m21 * m33 - m11 * m24 * m33 - m13 * m21 * m34 - m14 * m23 * m31) * invD;
-    //     
-    //     const n31 = (m21 * m32 * m44 + m22 * m34 * m41 + m24 * m31 * m42 - m21 * m34 * m41 - m22 * m31 * m44 - m24 * m32 * m41) * invD;
-    //     const n32 = (m11 * m34 * m42 + m12 * m31 * m44 + m14 * m32 * m41 - m11 * m32 * m44 - m12 * m34 * m41 - m14 * m31 * m42) * invD;
-    //     const n33 = (m11 * m22 * m44 + m12 * m24 * m41 + m14 * m21 * m42 - m11 * m24 * m42 - m12 * m21 * m44 - m14 * m22 * m41) * invD;
-    //     const n34 = (m11 * m24 * m32 + m12 * m21 * m34 + m14 * m22 * m31 - m11 * m22 * m34 - m12 * m24 * m31 - m14 * m21 * m32) * invD;
-    //     
-    //     const n41 = (m21 * m33 * m41 + m22 * m31 * m42 + m23 * m32 * m41 - m21 * m32 * m43 - m22 * m33 * m41 - m23 * m32 * m42) * invD;
-    //     const n42 = (m11 * m32 * m43 + m12 * m33 * m41 + m13 * m31 * m42 - m11 * m33 * m42 - m12 * m31 * m43 - m13 * m32 * m41) * invD;
-    //     const n43 = (m11 * m23 * m42 + m12 * m21 * m43 + m13 + m22 * m41 - m11 * m22 * m43 - m12 * m23 * m41 - m13 * m21 * m42) * invD;
-    //     const n44 = (m11 * m22 * m33 + m12 * m23 * m31 + m13 * m21 * m32 - m11 * m23 * m32 - m12 * m21 * m33 - m13 * m22 * m31) * invD;
-    //     
-    //     return new Matrix4(
-    //         n11, n12, n13, n14,
-    //         n21, n22, n23, n24,
-    //         n31, n32, n33, n34,
-    //         n41, n42, n43, n44
-    //     );
-    // }
-    
     // ref: https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js
     invert() {
 
@@ -485,29 +422,12 @@ export class Matrix4 {
         return this;
     }
 
-    // ref: https://marina.sys.wakayama-u.ac.jp/~tokoi/?date=20090829
-    static getOrthographicMatrix(left, right, bottom, top, near, far) {
-        const m00 = 2 / (right - left); // scale x
-        const m11 = 2 / (top - bottom); // scale y
-        const m22 = -2 / (far - near); // scale z
-        const m03 = -(right + left) / (right - left); // translate x
-        const m13 = -(top + bottom) / (top - bottom); // translate y
-        const m23 = -(far + near) / (far - near); // translate z
-        return new Matrix4(
-            m00, 0, 0, m03,
-            0, m11, 0, m13,
-            0, 0, m22, m23,
-            0, 0, 0, 1
-        );
-    }
-
     // ref
     // https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/WebGL_model_view_projection
     // fov ... rad
     // aspect ... w / h
     static getPerspectiveMatrix(fov, aspect, near, far) {
         const f = 1 / Math.tan(fov / 2);
-        // const nf = 1 / (near - far);
 
         const pjm = new Matrix4();
 
@@ -551,30 +471,7 @@ export class Matrix4 {
         );
         return result;
     }
-  
-    // position ... vector3
-    // rotation ... rotator
-    // scaling ... vector3
-    static fromTRS(position, rotation, scaling) {
-        const rotationRadians = rotation.getAxesRadians();
-        return Matrix4.multiplyMatrices(
-            Matrix4.translationMatrix(position),
-            Matrix4.rotationYMatrix(rotationRadians.y),
-            Matrix4.rotationXMatrix(rotationRadians.x),
-            Matrix4.rotationZMatrix(rotationRadians.z),
-            Matrix4.scalingMatrix(scaling)
-        );
-    }
-    
-    static fromQuaternion(q) {
-        const eulerRadian = q.toEulerRadian();
-        return Matrix4.multiplyMatrices(
-            Matrix4.rotationYMatrix(eulerRadian.y),
-            Matrix4.rotationXMatrix(eulerRadian.x),
-            Matrix4.rotationZMatrix(eulerRadian.z),
-        );
-    }
-
+   
     log()
     {
         console.log(`--------------------

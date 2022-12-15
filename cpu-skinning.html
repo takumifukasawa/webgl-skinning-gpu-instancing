@@ -103,7 +103,7 @@ const createGeometry = () => {
     // 0 ---- 1  ... 0段目
     // -----------------------------
     
-    const boxFaces = [
+    const boxIndices = [
         // 底面
         [0, 2, 1, 1, 2, 3],         // bottom
         // 1段目
@@ -135,8 +135,6 @@ const createGeometry = () => {
         [22, 20, 23, 23, 20, 21],   // top
     ];
     
-    const indices = [...boxFaces].flat();
-  
     const boxPositions = [
         // 0段目
         [-0.5, 0, 0.5],     // p0
@@ -168,7 +166,7 @@ const createGeometry = () => {
         [0.5, 5, 0.5],      // p21
         [-0.5, 5, -0.5],    // p22
         [0.5, 5, -0.5],     // p23
-    ].flat(); 
+    ]; 
     
     const boxColors = [
         // 0段目
@@ -201,7 +199,7 @@ const createGeometry = () => {
         [1, 0, 1], // p21
         [1, 0, 1], // p22
         [1, 0, 1], // p23
-    ].flat();
+    ];
     
     // 影響するboneのindex  
     // 4つまで指定可能
@@ -239,7 +237,7 @@ const createGeometry = () => {
     ];
 
     // 影響するboneのindexごとの重さ
-    const boneWeightsEachHeight = [
+    const boneWeights = [
         // 0段目
         [1, 0, 0, 0],       // p0: b0 * 1
         [1, 0, 0, 0],       // p1: b0 * 1
@@ -271,39 +269,36 @@ const createGeometry = () => {
         [1, 0, 0, 0],       // p22: b4 * 1
         [1, 0, 0, 0],       // p23: b4 * 1
     ];
-
-    const boneWeights = [
-    ].flat();
     
     return new VertexArrayObject({
         gpu,
         attributes: {
             position: {
-                data: boxPositions,
+                data: boxPositions.flat(),
                 size: 3,
                 location: 0,
                 usageType: AttributeUsageTypes.StaticDraw
             },
             color: {
-                data: boxColors,
+                data: boxColors.flat(),
                 size: 3,
                 location: 1,
                 usageType: AttributeUsageTypes.StaticDraw
             },
             aBoneIndices: {
-                data: boneIndices,
+                data: boneIndices.flat(),
                 size: 4,
                 location: 2,
                 usageType: AttributeUsageTypes.StaticDraw
             },
             aBoneWeights: {
-                data: (new Array(6 * 4).fill(0).map((elem, i) => boneWeightsEachHeight[Math.floor(i / 4)])).flat(),
+                data: boneWeights.flat(),
                 size: 4,
                 location: 3,
                 usageType: AttributeUsageTypes.StaticDraw
             },
         },
-        indices
+        indices: boxIndices.flat()
     });
 }
 
