@@ -30,7 +30,7 @@ export class VertexArrayObject extends GLObject {
 
         Object.keys(attributes).forEach(key => {
             const attribute = attributes[key];
-            const { data, size, location, usageType, divisor } = attribute;
+            const { data, size, location, divisor } = attribute;
             const vbo = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW); // static draw 固定
