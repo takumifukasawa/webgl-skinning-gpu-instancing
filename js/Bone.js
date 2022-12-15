@@ -1,9 +1,6 @@
 ﻿import {Matrix4} from "./Matrix4.js";
 
 export class Bone {
-    name;
-    index;
-    
     parent = null;
     children = [];
 
@@ -12,9 +9,7 @@ export class Bone {
     #boneOffsetMatrix; // ローカル座標系の初期姿勢行列の逆行列
     #jointMatrix = Matrix4.identity(); // ローカル座標系の姿勢行列
    
-    constructor({ name, index }) {
-        this.name = name;
-        this.index = index;
+    constructor() {
     }
 
     get childCount() {
