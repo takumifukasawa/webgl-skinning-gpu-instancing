@@ -326,6 +326,14 @@ const createBones = () => {
 
     // ボーンオフセット行列を作成
     rootBone.calcBoneOffsetMatrix();
+    
+    const bones = [
+        rootBone,
+        childBone1,
+        childBone2,
+        childBone3,
+        childBone4,
+    ];
    
     const updateBone = (time) => {
         const rot = (Math.sin(time) * 45) * Math.PI / 180;
@@ -344,7 +352,7 @@ const createBones = () => {
     }
 
     return {
-        rootBone,
+        bones,
         updateBone,
     }
 }
@@ -420,7 +428,7 @@ const main = () => {
             value: (new Array(5).fill(0).map(() => Matrix4.identity()))
         },
     };
-    const { rootBone, updateBone } = createBones();
+    const { bones, updateBone } = createBones();
     
     const onMouseMove = (e) => {
         const nx = (e.clientX / width) * 2 - 1;
@@ -446,39 +454,24 @@ const main = () => {
         uniforms.uProjectionMatrix.value = projectionMatrix;
     };
      
-    const getBoneOffsetMatrices = () => {
-        const matrices = [];
-        rootBone.traverse((bone) => {
-            const m = bone.boneOffsetMatrix.clone();
-            matrices.push(m);
-        });
-        return matrices;
-    }
-    
-    const getBoneJointMatrices = () => {
-        const matrices = [];
-        rootBone.traverse((bone) => {
-            const m = bone.jointMatrix.clone();
-            matrices.push(m);
-        });
-        return matrices;        
-    }
-    
     const tick = (time) => {
         const cameraLookAtPosition = new Vector3(0, 2, 0);
         const cameraWorldMatrix = Matrix4.getLookAtMatrix(targetCameraPosition, cameraLookAtPosition, Vector3.up(), true);
         uniforms.uViewMatrix.value = cameraWorldMatrix.invert();
         
         updateBone(time / 1000);
-       
-        rootBone.calcJointMatrix();
+      
+        // bones[0]はrootbone
+        bones[0].calcJointMatrix();
 
-        // ボーンオフセット行列を計算
-        const boneOffsetMatrices = getBoneOffsetMatrices();
-        // 現在の姿勢行列
-        const boneJointMatrices = getBoneJointMatrices();
         // 現在の姿勢行列 x ボーンオフセット行列
-        const jointMatrices = boneOffsetMatrices.map((boneOffsetMatrix, i) => Matrix4.multiplyMatrices(boneJointMatrices[i], boneOffsetMatrix));
+        const jointMatrices = [
+            Matrix4.multiplyMatrices(bones[0].jointMatrix, bones[0].boneOffsetMatrix), // b0
+            Matrix4.multiplyMatrices(bones[1].jointMatrix, bones[1].boneOffsetMatrix), // b1
+            Matrix4.multiplyMatrices(bones[2].jointMatrix, bones[2].boneOffsetMatrix), // b2
+            Matrix4.multiplyMatrices(bones[3].jointMatrix, bones[3].boneOffsetMatrix), // b3
+            Matrix4.multiplyMatrices(bones[4].jointMatrix, bones[4].boneOffsetMatrix), // b4
+        ];
 
         uniforms.uJointMatrices.value = jointMatrices
 

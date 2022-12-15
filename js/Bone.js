@@ -7,10 +7,10 @@ export class Bone {
     parent = null;
     children = [];
 
-    offsetMatrix; // 初期姿勢のボーンローカル座標
-    #poseMatrix; // 初期姿勢行列
-    #boneOffsetMatrix; // 初期姿勢行列の逆行列
-    #jointMatrix = Matrix4.identity();
+    offsetMatrix; //ボーンローカル座標系の初期姿勢
+    #poseMatrix; // ローカル座標系の初期姿勢行列
+    #boneOffsetMatrix; // ローカル座標系の初期姿勢行列の逆行列
+    #jointMatrix = Matrix4.identity(); // ローカル座標系の姿勢行列
    
     constructor({ name, index }) {
         this.name = name;
@@ -55,12 +55,5 @@ export class Bone {
             ? Matrix4.multiplyMatrices(parentBone.jointMatrix, this.offsetMatrix)
             : this.offsetMatrix;
         this.children.forEach(childBone => childBone.calcJointMatrix(this));
-    }
-
-    traverse(callback) {
-        callback(this);
-        this.children.forEach(child => {
-            child.traverse(callback);
-        })
     }
 }
