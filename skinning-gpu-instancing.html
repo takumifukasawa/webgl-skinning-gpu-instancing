@@ -393,7 +393,6 @@ uniform float uTime;
 out vec3 vColor;
 
 mat4 getJointMatrix(int boneIndex) {
-
     return mat4(
         texelFetch(uJointTexture, ivec2(0, boneIndex), 0),
         texelFetch(uJointTexture, ivec2(1, boneIndex), 0),
@@ -428,7 +427,7 @@ void main() {
         aInstanceOffsetPosition, 1
     );
         
-    gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * instanceOffsetMatrix * skinMatrix * vec4(aPosition, 1.);
+    gl_Position = uProjectionMatrix * uViewMatrix * instanceOffsetMatrix * uWorldMatrix * skinMatrix * vec4(aPosition, 1.);
 }
     `,
         fragmentShader: `#version 300 es

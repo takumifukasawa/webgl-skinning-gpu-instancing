@@ -351,11 +351,12 @@ uniform float uFrameIndex;
 out vec3 vColor;
 
 mat4 getJointMatrix(int boneIndex) {
+    int frameNum = 5;
     return mat4(
-        texelFetch(uJointTexture, ivec2(0, int(uFrameIndex) * 5 + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(1, int(uFrameIndex) * 5 + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(2, int(uFrameIndex) * 5 + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(3, int(uFrameIndex) * 5 + boneIndex), 0)
+        texelFetch(uJointTexture, ivec2(0, int(uFrameIndex) * frameNum + boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(1, int(uFrameIndex) * frameNum + boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(2, int(uFrameIndex) * frameNum + boneIndex), 0),
+        texelFetch(uJointTexture, ivec2(3, int(uFrameIndex) * frameNum + boneIndex), 0)
     );
 }
 
