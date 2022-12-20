@@ -33,13 +33,20 @@ export class VertexArrayObject extends GLObject {
             const { data, size, location, divisor } = attribute;
             const vbo = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW); // static draw 固定
+            // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW); // static draw 固定
+            gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW); // static draw 固定
             gl.enableVertexAttribArray(location);
             // size ... 頂点ごとに埋める数
             // stride is always 0 because buffer is not interleaved.
             // ref: https://developer.mozilla.org/ja/docs/Web/API/WebGLRenderingContext/vertexAttribPointer
-            gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
-
+            switch(data.constructor) {
+                case Float32Array:
+                    gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0);
+                    break;
+                case Uint16Array:
+                    gl.vertexAttribIPointer(location, size, gl.UNSIGNED_SHORT, false, 0, 0);
+                    break;
+            }
             if(divisor) {
                 gl.vertexAttribDivisor(location, divisor);
             }
@@ -62,12 +69,5 @@ export class VertexArrayObject extends GLObject {
         if(this.#ibo) {
             this.#ibo.unbind();
         }
-    }
-
-    updateAttribute(key, data) {
-        const gl = this.#gpu.gl;
-        gl.bindBuffer(gl.ARRAY_BUFFER, gl.STATIC_DRAW);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
-        gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
 }

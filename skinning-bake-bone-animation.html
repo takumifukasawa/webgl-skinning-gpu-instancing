@@ -275,22 +275,22 @@ const createGeometry = () => {
         gpu,
         attributes: {
             position: {
-                data: boxPositions.flat(),
+                data: new Float32Array(boxPositions.flat()),
                 size: 3,
                 location: 0,
             },
             color: {
-                data: boxColors.flat(),
+                data: new Float32Array(boxColors.flat()),
                 size: 3,
                 location: 1,
             },
             aBoneIndices: {
-                data: boneIndices.flat(),
+                data: new Uint16Array(boneIndices.flat()),
                 size: 4,
                 location: 2,
             },
             aBoneWeights: {
-                data: boneWeights.flat(),
+                data: new Float32Array(boneWeights.flat()),
                 size: 4,
                 location: 3,
             },
@@ -339,24 +339,25 @@ const createShader = () => {
     
 layout (location = 0) in vec3 aPosition;   
 layout (location = 1) in vec3 aColor; 
-layout (location = 2) in vec4 aBoneIndices;
+layout (location = 2) in uvec4 aBoneIndices;
 layout (location = 3) in vec4 aBoneWeights;
 
 uniform mat4 uWorldMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform sampler2D uJointTexture;
-uniform float uFrameIndex;
+uniform int uFrameIndex;
 
 out vec3 vColor;
 
-mat4 getJointMatrix(int boneIndex) {
+mat4 getJointMatrix(uint boneIndex) {
     int frameNum = 5;
+    uint targetIndex = uint(uFrameIndex * frameNum) + boneIndex;
     return mat4(
-        texelFetch(uJointTexture, ivec2(0, int(uFrameIndex) * frameNum + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(1, int(uFrameIndex) * frameNum + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(2, int(uFrameIndex) * frameNum + boneIndex), 0),
-        texelFetch(uJointTexture, ivec2(3, int(uFrameIndex) * frameNum + boneIndex), 0)
+        texelFetch(uJointTexture, ivec2(0, targetIndex), 0),
+        texelFetch(uJointTexture, ivec2(1, targetIndex), 0),
+        texelFetch(uJointTexture, ivec2(2, targetIndex), 0),
+        texelFetch(uJointTexture, ivec2(3, targetIndex), 0)
     );
 }
 
@@ -364,10 +365,10 @@ void main() {
     vColor = aColor;
 
     mat4 skinMatrix =
-        getJointMatrix(int(aBoneIndices.x)) * aBoneWeights.x + 
-        getJointMatrix(int(aBoneIndices.y)) * aBoneWeights.y +
-        getJointMatrix(int(aBoneIndices.z)) * aBoneWeights.z +
-        getJointMatrix(int(aBoneIndices.w)) * aBoneWeights.w;
+        getJointMatrix(aBoneIndices.x) * aBoneWeights.x + 
+        getJointMatrix(aBoneIndices.y) * aBoneWeights.y +
+        getJointMatrix(aBoneIndices.z) * aBoneWeights.z +
+        getJointMatrix(aBoneIndices.w) * aBoneWeights.w;
     
     gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * skinMatrix * vec4(aPosition, 1.);
 }
@@ -427,7 +428,7 @@ const main = () => {
             value: jointTexture
         },
         uFrameIndex: {
-            type: UniformTypes.Float,
+            type: UniformTypes.Int,
             value: 0
         }
     };

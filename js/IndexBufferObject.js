@@ -1,5 +1,4 @@
-﻿
-import { GLObject } from "./GLObject.js";
+﻿import { GLObject } from "./GLObject.js";
 
 export class IndexBufferObject extends GLObject {
     #ibo;

@@ -275,60 +275,60 @@ const createGeometry = ({ instanceCount }) => {
         gpu,
         attributes: {
             position: {
-                data: boxPositions.flat(),
+                data: new Float32Array(boxPositions.flat()),
                 size: 3,
                 location: 0,
             },
             color: {
-                data: boxColors.flat(),
+                data: new Float32Array(boxColors.flat()),
                 size: 3,
                 location: 1,
             },
             aBoneIndices: {
-                data: boneIndices.flat(),
+                data: new Uint16Array(boneIndices.flat()),
                 size: 4,
                 location: 2,
             },
             aBoneWeights: {
-                data: boneWeights.flat(),
+                data: new Float32Array(boneWeights.flat()),
                 size: 4,
                 location: 3,
             },
             aInstanceOffsetPosition: {
-                data: [
+                data: new Float32Array([
                     [0, 0, 2],
                     [0, 0, 0],
                     [0, 0, -2],
                     [0, 0, -4],
                     [0, 0, -6],
                     [0, 0, -8],
-                ].flat(),
+                ].flat()),
                 size: 3,
                 location: 4,
                 divisor: 1
             },
             aInstanceFrameOffset: {
-                data: [
+                data: new Uint16Array([
                     0,
                     5,
                     10,
                     15,
                     20,
                     25,
-                ],
+                ]),
                 size: 1,
                 location: 5,
                 divisor: 1
             },
             aInstanceColor: {
-                data: [
+                data: new Float32Array([
                     [1, 0, 0],
                     [0, 1, 0],
                     [0, 0, 1],
                     [1, 1, 0],
                     [0, 1, 1],
                     [1, 0, 1],
-                ].flat(),
+                ].flat()),
                 size: 3,
                 location: 6,
                 divisor: 1
@@ -378,10 +378,10 @@ const createShader = () => {
     
 layout (location = 0) in vec3 aPosition;   
 layout (location = 1) in vec3 aColor; 
-layout (location = 2) in vec4 aBoneIndices;
+layout (location = 2) in uvec4 aBoneIndices;
 layout (location = 3) in vec4 aBoneWeights;
 layout (location = 4) in vec3 aInstanceOffsetPosition;
-layout (location = 5) in float aInstanceFrameOffset;
+layout (location = 5) in uint aInstanceFrameOffset;
 layout (location = 6) in vec3 aInstanceColor;
 
 uniform mat4 uWorldMatrix;
@@ -392,7 +392,7 @@ uniform float uTime;
 
 out vec3 vColor;
 
-mat4 getJointMatrix(int boneIndex) {
+mat4 getJointMatrix(uint boneIndex) {
     return mat4(
         texelFetch(uJointTexture, ivec2(0, boneIndex), 0),
         texelFetch(uJointTexture, ivec2(1, boneIndex), 0),
@@ -406,13 +406,13 @@ void main() {
     
     float fps = 30.;
     float frameCount = 60.;
-    int frameIndex = int(mod(floor(uTime * fps) + aInstanceFrameOffset, frameCount));
+    int frameIndex = int(mod(floor(uTime * fps) + float(aInstanceFrameOffset), frameCount));
     int boneCount = 5;
     
-    int b0 = frameIndex * boneCount + int(aBoneIndices.x);
-    int b1 = frameIndex * boneCount + int(aBoneIndices.y);
-    int b2 = frameIndex * boneCount + int(aBoneIndices.z);
-    int b3 = frameIndex * boneCount + int(aBoneIndices.w);
+    uint b0 = uint(frameIndex * boneCount) + aBoneIndices.x;
+    uint b1 = uint(frameIndex * boneCount) + aBoneIndices.y;
+    uint b2 = uint(frameIndex * boneCount) + aBoneIndices.z;
+    uint b3 = uint(frameIndex * boneCount) + aBoneIndices.w;
 
     mat4 skinMatrix =
         getJointMatrix(b0) * aBoneWeights.x + 

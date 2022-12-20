@@ -274,22 +274,22 @@ const createGeometry = () => {
         gpu,
         attributes: {
             position: {
-                data: boxPositions.flat(),
+                data: new Float32Array(boxPositions.flat()),
                 size: 3,
                 location: 0,
             },
             color: {
-                data: boxColors.flat(),
+                data: new Float32Array(boxColors.flat()),
                 size: 3,
                 location: 1,
             },
             aBoneIndices: {
-                data: boneIndices.flat(),
+                data: new Uint16Array(boneIndices.flat()),
                 size: 4,
                 location: 2,
             },
             aBoneWeights: {
-                data: boneWeights.flat(),
+                data: new Float32Array(boneWeights.flat()),
                 size: 4,
                 location: 3,
             },
@@ -357,7 +357,7 @@ const createShader = () => {
     
 layout (location = 0) in vec3 aPosition;   
 layout (location = 1) in vec3 aColor; 
-layout (location = 2) in vec4 aBoneIndices;
+layout (location = 2) in uvec4 aBoneIndices;
 layout (location = 3) in vec4 aBoneWeights;
 
 uniform mat4 uWorldMatrix;
@@ -372,10 +372,10 @@ void main() {
     vColor = aColor;
     
     mat4 skinMatrix =
-        uJointMatrices[int(aBoneIndices.x)] * aBoneWeights.x + 
-        uJointMatrices[int(aBoneIndices.y)] * aBoneWeights.y +
-        uJointMatrices[int(aBoneIndices.z)] * aBoneWeights.z +
-        uJointMatrices[int(aBoneIndices.w)] * aBoneWeights.w;
+        uJointMatrices[aBoneIndices.x] * aBoneWeights.x + 
+        uJointMatrices[aBoneIndices.y] * aBoneWeights.y +
+        uJointMatrices[aBoneIndices.z] * aBoneWeights.z +
+        uJointMatrices[aBoneIndices.w] * aBoneWeights.w;
     
     gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * skinMatrix * vec4(aPosition, 1.);
 }

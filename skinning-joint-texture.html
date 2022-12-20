@@ -275,22 +275,22 @@ const createGeometry = () => {
         gpu,
         attributes: {
             position: {
-                data: boxPositions.flat(),
+                data: new Float32Array(boxPositions.flat()),
                 size: 3,
                 location: 0,
             },
             color: {
-                data: boxColors.flat(),
+                data: new Float32Array(boxColors.flat()),
                 size: 3,
                 location: 1,
             },
             aBoneIndices: {
-                data: boneIndices.flat(),
+                data: new Uint16Array(boneIndices.flat()),
                 size: 4,
                 location: 2,
             },
             aBoneWeights: {
-                data: boneWeights.flat(),
+                data: new Float32Array(boneWeights.flat()),
                 size: 4,
                 location: 3,
             },
@@ -358,7 +358,7 @@ const createShader = () => {
     
 layout (location = 0) in vec3 aPosition;   
 layout (location = 1) in vec3 aColor; 
-layout (location = 2) in vec4 aBoneIndices;
+layout (location = 2) in uvec4 aBoneIndices;
 layout (location = 3) in vec4 aBoneWeights;
 
 uniform mat4 uWorldMatrix;
@@ -368,7 +368,7 @@ uniform sampler2D uJointTexture;
 
 out vec3 vColor;
 
-mat4 getJointMatrix(int boneIndex) {
+mat4 getJointMatrix(uint boneIndex) {
     return mat4(
         texelFetch(uJointTexture, ivec2(0, boneIndex), 0),
         texelFetch(uJointTexture, ivec2(1, boneIndex), 0),
@@ -381,10 +381,10 @@ void main() {
     vColor = aColor;
 
     mat4 skinMatrix =
-        getJointMatrix(int(aBoneIndices.x)) * aBoneWeights.x + 
-        getJointMatrix(int(aBoneIndices.y)) * aBoneWeights.y +
-        getJointMatrix(int(aBoneIndices.z)) * aBoneWeights.z +
-        getJointMatrix(int(aBoneIndices.w)) * aBoneWeights.w;
+        getJointMatrix(aBoneIndices.x) * aBoneWeights.x + 
+        getJointMatrix(aBoneIndices.y) * aBoneWeights.y +
+        getJointMatrix(aBoneIndices.z) * aBoneWeights.z +
+        getJointMatrix(aBoneIndices.w) * aBoneWeights.w;
     
     gl_Position = uProjectionMatrix * uViewMatrix * uWorldMatrix * skinMatrix * vec4(aPosition, 1.);
 }
