@@ -300,33 +300,33 @@ const createGeometry = () => {
 }
 
 const createBones = () => {
-    const rootBone = new Bone();
-    rootBone.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 0.5, 0)); // offset
+    const bone0 = new Bone();
+    bone0.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 0.5, 0)); // offset
     
-    const childBone1 = new Bone();
+    const bone1 = new Bone();
     const bone1m = Matrix4.translationMatrix(new Vector3(0, 1, 0));
-    childBone1.offsetMatrix = bone1m; // offset from parent (root bone)
-    rootBone.addChild(childBone1);
+    bone1.offsetMatrix = bone1m; // offset from parent (bone0)
+    bone0.addChild(bone1);
 
-    const childBone2 = new Bone();
+    const bone2 = new Bone();
     const bone2m = Matrix4.translationMatrix(new Vector3(0, 1, 0));
-    childBone2.offsetMatrix = bone2m; // offset from parent (child bone 1)
-    childBone1.addChild(childBone2);
+    bone2.offsetMatrix = bone2m; // offset from parent (bone1)
+    bone1.addChild(bone2);
 
-    const childBone3 = new Bone();
-    childBone3.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (child bone 2)
-    childBone2.addChild(childBone3);
+    const bone3 = new Bone();
+    bone3.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (bone2)
+    bone2.addChild(bone3);
 
-    const childBone4 = new Bone();
-    childBone4.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (child bone 3)
-    childBone3.addChild(childBone4);
+    const bone4 = new Bone();
+    bone4.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (bone3)
+    bone3.addChild(bone4);
     
     const bones = [
-        rootBone,
-        childBone1,
-        childBone2,
-        childBone3,
-        childBone4,
+        bone0,
+        bone1,
+        bone2,
+        bone3,
+        bone4,
     ];
    
     return bones;

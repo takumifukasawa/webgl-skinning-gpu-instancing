@@ -9,9 +9,6 @@ export class Bone {
     #boneOffsetMatrix; // ローカル座標系の初期姿勢行列の逆行列
     #jointMatrix = Matrix4.identity(); // ローカル座標系の姿勢行列
    
-    constructor() {
-    }
-
     get childCount() {
         return this.children.length;
     }

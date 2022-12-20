@@ -299,46 +299,46 @@ const createGeometry = () => {
 }
 
 const createBones = () => {
-    const rootBone = new Bone({ name: "root_bone", index: 0 });
-    rootBone.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 0.5, 0)); // offset
-    
-    const childBone1 = new Bone({ name: "child_bone_1", index: 1 });
+    const bone0 = new Bone();
+    bone0.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 0.5, 0)); // offset
+   
+    const bone1 = new Bone();
     const bone1m = Matrix4.translationMatrix(new Vector3(0, 1, 0));
-    childBone1.offsetMatrix = bone1m; // offset from parent (root bone)
-    rootBone.addChild(childBone1);
+    bone1.offsetMatrix = bone1m; // offset from parent (root bone)
+    bone0.addChild(bone1);
 
-    const childBone2 = new Bone({ name: "child_bone_2", index: 2 });
+    const bone2 = new Bone();
     const bone2m = Matrix4.translationMatrix(new Vector3(0, 1, 0));
-    childBone2.offsetMatrix = bone2m; // offset from parent (child bone 1)
-    childBone1.addChild(childBone2);
+    bone2.offsetMatrix = bone2m; // offset from parent (bone1)
+    bone1.addChild(bone2);
 
-    const childBone3 = new Bone({ name: "child_bone_3", index: 3 });
-    childBone3.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (child bone 2)
-    childBone2.addChild(childBone3);
+    const bone3 = new Bone();
+    bone3.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (bone2)
+    bone2.addChild(bone3);
 
-    const childBone4 = new Bone({ name: "child_bone_4", index: 4 });
-    childBone4.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (child bone 3)
-    childBone3.addChild(childBone4);
+    const bone4 = new Bone();
+    bone4.offsetMatrix = Matrix4.translationMatrix(new Vector3(0, 1, 0)); // offset from parent (bone3)
+    bone3.addChild(bone4);
     
     const bones = [
-        rootBone,
-        childBone1,
-        childBone2,
-        childBone3,
-        childBone4,
+        bone0,
+        bone1,
+        bone2,
+        bone3,
+        bone4,
     ];
    
     const updateBone = (time) => {
         const rot = Math.sin(Math.PI * 2 * (time / 2)) * 30 * Math.PI / 180;
-        childBone1.offsetMatrix = Matrix4.multiplyMatrices(
+        bone1.offsetMatrix = Matrix4.multiplyMatrices(
             Matrix4.translationMatrix(new Vector3(0, 1, 0)),
             Matrix4.rotationZMatrix(rot)
         );
-        childBone2.offsetMatrix = Matrix4.multiplyMatrices(
+        bone2.offsetMatrix = Matrix4.multiplyMatrices(
             Matrix4.translationMatrix(new Vector3(0, 1, 0)),
             Matrix4.rotationZMatrix(rot)
         );
-        childBone3.offsetMatrix = Matrix4.multiplyMatrices(
+        bone3.offsetMatrix = Matrix4.multiplyMatrices(
             Matrix4.translationMatrix(new Vector3(0, 1, 0)),
             Matrix4.rotationZMatrix(rot)
         );
