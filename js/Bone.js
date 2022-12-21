@@ -4,10 +4,10 @@ export class Bone {
     parent = null;
     children = [];
 
-    offsetMatrix; //ボーンローカル座標系の初期姿勢
-    #poseMatrix; // ローカル座標系の初期姿勢行列
-    #boneOffsetMatrix; // ローカル座標系の初期姿勢行列の逆行列
-    #jointMatrix = Matrix4.identity(); // ローカル座標系の姿勢行列
+    offsetMatrix; // 親ボーンに対する相対的な姿勢
+    #poseMatrix; // ローカル空間における初期姿勢行列
+    #boneOffsetMatrix; // ローカル空間における初期姿勢行列の逆行列（= ボーンオフセット行列）
+    #jointMatrix = Matrix4.identity(); // ローカル空間における現在の姿勢行列
    
     get childCount() {
         return this.children.length;
